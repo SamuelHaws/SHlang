@@ -2,25 +2,8 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include "Token.h"
 using namespace std;
-
-class Token
-{
-public:
-	int id;
-	string text;
-	Token(int id1, string text1) { id = id1; text = text1; }
-
-	// Copy constructor not currently used
-	// Token(const Token &t2) { id = t2.id; text = t2.text; }
-
-	friend ostream &operator<<(ostream &out, const Token &t) {
-		out << "id: " << t.id << "\ttext: " << t.text;
-		return out;
-	}
-
-	void appendCharToText(char c) { text += c; }
-};
 
 // Advance filestream by character through 0 or more whitespace chars
 char handleWhitespace(char &c, ifstream &fin)
