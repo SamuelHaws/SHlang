@@ -2,17 +2,10 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <set>
 #include "Token.h"
 #include "TokenTypes.h"
 using namespace std;
-
-// Advance filestream by character through 0 or more whitespace chars
-void handleWhitespace(char &c, ifstream &fin)
-{
-	while (isspace(c) && !fin.eof()) {
-		fin.get(c);
-	}
-}
 
 bool strIsDigit(string s) 
 {
@@ -24,13 +17,13 @@ bool strIsDigit(string s)
 }
 
 // TODO: Add other rules
-// A valid identifier must not start with a number, and all chars must be alphanumeric or '_'
+// A valid identifier must not start with a number, and all chars must be alphanumeric
 bool isValidIdentifier(string s)
 {
 	if (isdigit(s[0])) return false;
 	for (char const &c : s)
 	{
-		if (!isalnum(c) && c != '_') return false;
+		if (!isalnum(c)) return false;
 	}
 	return true;
 }
@@ -40,6 +33,7 @@ void addToken(vector<Token> &tokens, string &lexeme)
 {
 	// tokenType to be included in Token initialization
 	TokenType tokenType;
+	// TODO: Convert these to sets
 	vector<string> arithmeticOps = { "+", "-", "*", "/" };
 	vector<string> compareOps = { "==", "!=", "<", ">", "<=", ">=", "&&", "||" };
 	vector<string> dataTypes = { "int", "char", "boolean" }; // for now
@@ -68,7 +62,7 @@ void addToken(vector<Token> &tokens, string &lexeme)
 	else if (isValidIdentifier(lexeme)) tokenType = IDENTIFIER;
 	else
 	{
-		cerr << "Invalid identifier found: " << lexeme << endl;
+		cerr << "Invalid lexeme found: " << lexeme << endl;
 		exit(1);
 	}
 
@@ -78,6 +72,8 @@ void addToken(vector<Token> &tokens, string &lexeme)
 
 // Reads characters from file, extracts lexemes, calls addToken to populate tokens
 vector<Token> getTokens(string filename) {
+	// Valid token lexemes
+	// set<string> validTokenLexemes = { "+","-","*","/","==","!=","<",">","<=",">=","&&","||","int","char","boolean","(",")","{","}",",",";","if","else","return","for","return","for","while","=","!" };
 	// File stream for SHlang source file (closes automatically at end of scope)
 	ifstream fin;
 	fin.open(filename);
@@ -97,29 +93,55 @@ vector<Token> getTokens(string filename) {
 		// If whitespace is encountered, move to next non-whitespace char and add token
 		if (isspace(c))
 		{
-			handleWhitespace(c, fin);
+			// Advance filestream through 0 or more whitespace chars
+			while (isspace(c) && !fin.eof()) {
+				fin.get(c);
+			}
+			// Add token of lexeme prior to whitespace if present
 			if (lexeme.length() > 0)
 			{
 				addToken(tokens, lexeme);
 			}
 		}
-		// Else if c is not part of a valid number or identifier, add token
-		// BAD! What about "&&"? Would add &
-		else if (!isalnum(c) && c != '_')
-		{
-			//lexeme += c;
-			//fin.get(c);
-			addToken(tokens, lexeme);
-		}
-		// Otherwise, insert c into current token text and read next char
+		// If c not whitespace
 		else
 		{
-			lexeme += c;
-			fin.get(c);
+			// Found char that is not part of number, identifier or reserved keyword
+			if (!isalnum(c))
+			{
+				if (lexeme.length() > 0)
+				{
+					// Alphanumeric followed by non-alphanumeric present
+					if (isalnum(lexeme[lexeme.length() - 1]))
+					{
+						addToken(tokens, lexeme);
+					}
+					// Else, multichar non-number/non-identifier token
+				}
+				// In any case, append c to lexeme
+				lexeme += c;
+				// If current lexeme is a valid token
+				//if (validTokenLexemes.find(lexeme) != validTokenLexemes.end())
+				//{
+				//	lexeme += c;
+				//}
+				fin.get(c);
+			}
+			// c is part of number, identifier or reserved keyword
+			else
+			{
+				// Non-alphanumeric followed by alphanumeric present
+				if (lexeme.length() > 0 && !isalnum(lexeme[lexeme.length() - 1]))
+				{
+					addToken(tokens, lexeme);
+				}
+				lexeme += c;
+				fin.get(c);
+			}
 		}
 	}
-	// Append last token to tokens
-	// tokens.push_back(token);
+
+	addToken(tokens, lexeme);
 
 	return tokens;
 }
