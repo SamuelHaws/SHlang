@@ -2,10 +2,11 @@
 #include <iostream>
 #include "Token.h"
 
-Token::Token(int id1, std::string text1) { id = id1; text = text1; }
+Token::Token(TokenType type) : type{ type } {}
+Token::Token(TokenType type, std::string &text) : type{ type }, text{ text } {}
 
 std::ostream &operator<<(std::ostream &out, const Token &t) {
-	out << "id: " << t.id << "\ttext: " << t.text;
+	out << "type: " << t.type << "\ttext: " << t.text;
 	return out;
 }
 

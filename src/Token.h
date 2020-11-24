@@ -1,5 +1,6 @@
 #include <string>
 #include <iostream>
+#include "TokenTypes.h"
 
 #ifndef TOKEN_INCLUDE
 #define TOKEN_INCLUDE
@@ -8,9 +9,11 @@
 class Token
 {
 public:
-	int id;
+	TokenType type;
 	std::string text;
-	Token(int id1, std::string text1);
+	
+	Token(TokenType type);
+	Token(TokenType type, std::string &text);
 
 	friend std::ostream &operator<<(std::ostream &out, const Token &t);
 
